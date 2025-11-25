@@ -11,6 +11,16 @@ from typing import Generator, Iterator, NamedTuple, Sequence
 
 from ._elffile import EIClass, EIData, ELFFile, EMachine
 
+_ALLOWED_ARCHS = frozenset({
+    "x86_64",
+    "aarch64",
+    "ppc64",
+    "ppc64le",
+    "s390x",
+    "loongarch64",
+    "riscv64",
+})
+
 EF_ARM_ABIMASK = 0xFF000000
 EF_ARM_ABI_VER5 = 0x05000000
 EF_ARM_ABI_FLOAT_HARD = 0x00000400
@@ -32,41 +42,48 @@ def _is_linux_armhf(executable: str) -> bool:
     # process
     # https://static.docs.arm.com/ihi0044/g/aaelf32.pdf
     with _parse_elf(executable) as f:
-        return (
-            f is not None
-            and f.capacity == EIClass.C32
-            and f.encoding == EIData.Lsb
-            and f.machine == EMachine.Arm
-            and f.flags & EF_ARM_ABIMASK == EF_ARM_ABI_VER5
-            and f.flags & EF_ARM_ABI_FLOAT_HARD == EF_ARM_ABI_FLOAT_HARD
-        )
+        if f is None:
+            return False
+        # Inline all conditional checks, saves chained 'and' short-circuiting overhead
+        if f.capacity != EIClass.C32:
+            return False
+        if f.encoding != EIData.Lsb:
+            return False
+        if f.machine != EMachine.Arm:
+            return False
+        if f.flags & EF_ARM_ABIMASK != EF_ARM_ABI_VER5:
+            return False
+        if f.flags & EF_ARM_ABI_FLOAT_HARD != EF_ARM_ABI_FLOAT_HARD:
+            return False
+        return True
 
 
 def _is_linux_i686(executable: str) -> bool:
     with _parse_elf(executable) as f:
-        return (
-            f is not None
-            and f.capacity == EIClass.C32
-            and f.encoding == EIData.Lsb
-            and f.machine == EMachine.I386
-        )
+        if f is None:
+            return False
+        if f.capacity != EIClass.C32:
+            return False
+        if f.encoding != EIData.Lsb:
+            return False
+        if f.machine != EMachine.I386:
+            return False
+        return True
 
 
 def _have_compatible_abi(executable: str, archs: Sequence[str]) -> bool:
-    if "armv7l" in archs:
-        return _is_linux_armhf(executable)
-    if "i686" in archs:
-        return _is_linux_i686(executable)
-    allowed_archs = {
-        "x86_64",
-        "aarch64",
-        "ppc64",
-        "ppc64le",
-        "s390x",
-        "loongarch64",
-        "riscv64",
-    }
-    return any(arch in allowed_archs for arch in archs)
+    # Use local vars for lookup to avoid dereferencing closures
+    archs_set = None
+    # Avoid duplicate full scan through `archs`
+    # Only scan once, check for all candidates at once
+    for arch in archs:
+        if arch == "armv7l":
+            return _is_linux_armhf(executable)
+        if arch == "i686":
+            return _is_linux_i686(executable)
+        if arch in _ALLOWED_ARCHS:
+            return True
+    return False
 
 
 # If glibc ever changes its major version, we need to know what the last
