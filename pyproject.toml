@@ -136,3 +136,11 @@ flake8-unused-arguments.ignore-variadic-names = true
 
 [tool.uv.sources]
 codeflash = { path = "../codeflash", editable = true }
+
+[tool.codeflash]
+# All paths are relative to this pyproject.toml's directory.
+module-root = "src"
+tests-root = "tests"
+test-framework = "pytest"
+ignore-paths = []
+formatter-cmds = ["disabled"]
