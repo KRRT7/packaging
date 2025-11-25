@@ -185,6 +185,8 @@ _DICT_FIELDS = {
 
 def _parse_keywords(data: str) -> list[str]:
     """Split a string of comma-separated keywords into a list of keywords."""
+    if ',' not in data:
+        return [data.strip()]
     return [k.strip() for k in data.split(",")]
 
 
