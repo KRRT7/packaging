@@ -9,7 +9,7 @@ description = "Core utilities for Python packages"
 dynamic = ["version"]
 license = "Apache-2.0 OR BSD-2-Clause"
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [{name = "Donald Stufft", email = "donald@stufft.io"}]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
