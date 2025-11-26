@@ -505,10 +505,16 @@ def _strip_trailing_zeros(release: tuple[int, ...]) -> tuple[int, ...]:
     # from the end and returns as soon as it finds a non-zero value. When
     # reading a lot of versions, this is a fairly hot function, so not using
     # enumerate/reversed, which is slightly slower.
-    for i in range(len(release) - 1, -1, -1):
-        if release[i] != 0:
-            return release[: i + 1]
-    return ()
+    # Optimize: Use a single pass, avoid repeated indexing and function calls.
+    length = len(release)
+    if length == 0:
+        return ()
+    i = length - 1
+    while i >= 0 and release[i] == 0:
+        i -= 1
+    if i == -1:
+        return ()
+    return release[:i+1]
 
 
 def _cmpkey(
@@ -562,7 +568,7 @@ def _cmpkey(
         # - Shorter versions sort before longer versions when the prefixes
         #   match exactly
         _local = tuple(
-            (i, "") if isinstance(i, int) else (NegativeInfinity, i) for i in local
+            (i, "") if type(i) is int else (NegativeInfinity, i) for i in local
         )
 
     return epoch, _release, _pre, _post, _dev, _local
