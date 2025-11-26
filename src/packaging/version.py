@@ -52,7 +52,22 @@ def parse(version: str) -> Version:
     :param version: The version string to parse.
     :raises InvalidVersion: When the version string is not a valid version.
     """
-    return Version(version)
+    # Memoize Version object creation for previously seen version strings.
+    # This is thread-safe because dict set/get for previously created values is atomic.
+    # LRU cache not used as memory management is delegated to process lifecycle.
+    # Since Version objects should be immutable, caching is valid here.
+    # (If memory is a concern, consider functools.lru_cache or similar with maxsize.)
+    # This optimization is safe as Version is used as a value object.
+    # The cache is private to this module and hidden from consumers.
+    if not hasattr(parse, "_cache"):
+        parse._cache = {}
+    cache = parse._cache
+    cached = cache.get(version, None)
+    if cached is not None:
+        return cached
+    obj = Version(version)
+    cache[version] = obj
+    return obj
 
 
 class InvalidVersion(ValueError):
