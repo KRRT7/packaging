@@ -230,7 +230,8 @@ wheels = [
 
 [[package]]
 name = "codeflash"
-source = { editable = "../codeflash" }
+version = "0.18.6.post6.dev0+cff6a305"
+source = { git = "https://github.com/codeflash-ai/codeflash.git#cff6a305828a2b33c17301c575103595ad0a4721" }
 dependencies = [
     { name = "click", version = "8.1.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "click", version = "8.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -273,86 +274,14 @@ dependencies = [
     { name = "unittest-xml-reporting" },
 ]
 
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.1.0" },
-    { name = "codeflash-benchmark", editable = "../codeflash/codeflash-benchmark" },
-    { name = "coverage", specifier = ">=7.6.4" },
-    { name = "crosshair-tool", specifier = ">=0.0.78" },
-    { name = "dill", specifier = ">=0.3.8" },
-    { name = "filelock" },
-    { name = "gitpython", specifier = ">=3.1.31" },
-    { name = "humanize", specifier = ">=4.0.0" },
-    { name = "inquirer", specifier = ">=3.0.0" },
-    { name = "isort", specifier = ">=5.11.0" },
-    { name = "jedi", specifier = ">=0.19.1" },
-    { name = "junitparser", specifier = ">=3.1.0" },
-    { name = "libcst", specifier = ">=1.0.1" },
-    { name = "line-profiler", specifier = ">=4.2.0" },
-    { name = "lxml", specifier = ">=5.3.0" },
-    { name = "parameterized", specifier = ">=0.9.0" },
-    { name = "platformdirs", specifier = ">=4.3.7" },
-    { name = "posthog", specifier = ">=3.0.0" },
-    { name = "pydantic", specifier = ">=1.10.1" },
-    { name = "pygls", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pytest", specifier = ">=7.0.0" },
-    { name = "pytest-asyncio", specifier = ">=1.2.0" },
-    { name = "pytest-timeout", specifier = ">=2.1.0" },
-    { name = "rich", specifier = ">=13.8.1" },
-    { name = "sentry-sdk", specifier = ">=1.40.6,<3.0.0" },
-    { name = "timeout-decorator", specifier = ">=0.5.0" },
-    { name = "tomlkit", specifier = ">=0.11.7" },
-    { name = "unidiff", specifier = ">=0.7.4" },
-    { name = "unittest-xml-reporting", specifier = ">=3.2.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "ipython", specifier = ">=8.12.0" },
-    { name = "lxml-stubs", specifier = ">=0.5.1" },
-    { name = "mypy", specifier = ">=1.13" },
-    { name = "pandas-stubs", specifier = ">=2.2.2.240807,<2.2.3.241009" },
-    { name = "pre-commit", specifier = ">=4.2.0,<5" },
-    { name = "ruff", specifier = ">=0.7.0" },
-    { name = "types-cffi", specifier = ">=1.16.0.20240331" },
-    { name = "types-colorama", specifier = ">=0.4.15.20240311" },
-    { name = "types-decorator", specifier = ">=5.1.8.20240310" },
-    { name = "types-gevent", specifier = ">=24.11.0.20241230,<25" },
-    { name = "types-greenlet", specifier = ">=3.1.0.20241221,<4" },
-    { name = "types-jsonschema", specifier = ">=4.23.0.20240813" },
-    { name = "types-openpyxl", specifier = ">=3.1.5.20241020" },
-    { name = "types-pexpect", specifier = ">=4.9.0.20241208,<5" },
-    { name = "types-pygments", specifier = ">=2.18.0.20240506" },
-    { name = "types-python-dateutil", specifier = ">=2.9.0.20241003" },
-    { name = "types-regex", specifier = ">=2024.9.11.20240912" },
-    { name = "types-requests", specifier = ">=2.32.0.20241016" },
-    { name = "types-six", specifier = ">=1.16.21.20241009" },
-    { name = "types-unidiff", specifier = ">=0.7.0.20240505,<0.8" },
-    { name = "uv", specifier = ">=0.6.2" },
-]
-tests = [
-    { name = "black", specifier = ">=25.9.0" },
-    { name = "eval-type-backport" },
-    { name = "jax", specifier = ">=0.4.30" },
-    { name = "numpy", specifier = ">=2.0.2" },
-    { name = "pandas", specifier = ">=2.3.3" },
-    { name = "pyrsistent", specifier = ">=0.20.0" },
-    { name = "scipy", specifier = ">=1.13.1" },
-    { name = "torch", specifier = ">=2.8.0" },
-    { name = "xarray", specifier = ">=2024.7.0" },
-]
-
 [[package]]
 name = "codeflash-benchmark"
 version = "0.2.0"
-source = { editable = "../codeflash/codeflash-benchmark" }
+source = { git = "https://github.com/codeflash-ai/codeflash.git?subdirectory=codeflash-benchmark#cff6a305828a2b33c17301c575103595ad0a4721" }
 dependencies = [
     { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pytest", version = "9.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
-
-[package.metadata]
-requires-dist = [{ name = "pytest", specifier = ">=7.0.0,!=8.3.4" }]
 
 [[package]]
 name = "colorama"
@@ -1294,7 +1223,7 @@ test = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "codeflash", editable = "../codeflash" }]
+requires-dist = [{ name = "codeflash", git = "https://github.com/codeflash-ai/codeflash.git" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1431,7 +1360,7 @@ wheels = [
 
 [[package]]
 name = "pydantic"
-version = "2.12.4"
+version = "2.12.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -1439,9 +1368,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/ad/a17bc283d7d81837c061c49e3eaa27a45991759a1b7eae1031921c6bd924/pydantic-2.12.4.tar.gz", hash = "sha256:0f8cb9555000a4b5b617f66bfd2566264c4984b27589d3b845685983e8ea85ac", size = 821038, upload-time = "2025-11-05T10:50:08.59Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/44/36f1a6e523abc58ae5f928898e4aca2e0ea509b5aa6f6f392a5d882be928/pydantic-2.12.5.tar.gz", hash = "sha256:4d351024c75c0f085a9febbb665ce8c0c6ec5d30e903bdb6394b7ede26aebb49", size = 821591, upload-time = "2025-11-26T15:11:46.471Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/2f/e68750da9b04856e2a7ec56fc6f034a5a79775e9b9a81882252789873798/pydantic-2.12.4-py3-none-any.whl", hash = "sha256:92d3d202a745d46f9be6df459ac5a064fdaa3c1c4cd8adcfa332ccf3c05f871e", size = 463400, upload-time = "2025-11-05T10:50:06.732Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/87/b70ad306ebb6f9b585f114d0ac2137d792b48be34d732d60e597c2f8465a/pydantic-2.12.5-py3-none-any.whl", hash = "sha256:e561593fccf61e8a20fc46dfc2dfe075b8be7d0188df33f221ad1f0139180f9d", size = 463580, upload-time = "2025-11-26T15:11:44.605Z" },
 ]
 
 [[package]]

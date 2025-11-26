@@ -134,9 +134,6 @@ flake8-unused-arguments.ignore-variadic-names = true
 "docs/conf.py" = ["INP001", "S", "A001"]
 "noxfile.py" = ["T20", "S"]
 
-[tool.uv.sources]
-codeflash = { path = "../codeflash", editable = true }
-
 [tool.codeflash]
 # All paths are relative to this pyproject.toml's directory.
 module-root = "src"
@@ -144,3 +141,6 @@ tests-root = "tests"
 test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["disabled"]
+
+[tool.uv.sources]
+codeflash = { git = "https://github.com/codeflash-ai/codeflash.git" }
