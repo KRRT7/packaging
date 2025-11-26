@@ -14,6 +14,8 @@ from typing import Any, Callable, NamedTuple, SupportsInt, Tuple, Union
 
 from ._structures import Infinity, InfinityType, NegativeInfinity, NegativeInfinityType
 
+_precompile_flags = re.VERBOSE | re.IGNORECASE
+
 __all__ = ["VERSION_PATTERN", "InvalidVersion", "Version", "parse"]
 
 LocalType = Tuple[Union[int, str], ...]
@@ -202,25 +204,32 @@ class Version(_BaseVersion):
             raise InvalidVersion(f"Invalid version: {version!r}")
 
         # Store the parsed out pieces of the version
+
+        # Store the parsed out pieces of the version
+        g = match.group
         self._version = _Version(
-            epoch=int(match.group("epoch")) if match.group("epoch") else 0,
-            release=tuple(int(i) for i in match.group("release").split(".")),
-            pre=_parse_letter_version(match.group("pre_l"), match.group("pre_n")),
+            epoch=int(g("epoch")) if g("epoch") else 0,
+            # Avoid generator: build tuple directly from split list
+            release=tuple(map(int, g("release").split("."))),
+            pre=_parse_letter_version(g("pre_l"), g("pre_n")),
             post=_parse_letter_version(
-                match.group("post_l"), match.group("post_n1") or match.group("post_n2")
+                g("post_l"), g("post_n1") or g("post_n2")
             ),
-            dev=_parse_letter_version(match.group("dev_l"), match.group("dev_n")),
-            local=_parse_local_version(match.group("local")),
+            dev=_parse_letter_version(g("dev_l"), g("dev_n")),
+            local=_parse_local_version(g("local")),
         )
 
         # Generate a key which will be used for sorting
+
+        # Generate a key which will be used for sorting
+        v = self._version
         self._key = _cmpkey(
-            self._version.epoch,
-            self._version.release,
-            self._version.pre,
-            self._version.post,
-            self._version.dev,
-            self._version.local,
+            v.epoch,
+            v.release,
+            v.pre,
+            v.post,
+            v.dev,
+            v.local,
         )
 
     def __repr__(self) -> str:
@@ -237,25 +246,27 @@ class Version(_BaseVersion):
         >>> str(Version("1.0a5"))
         '1.0a5'
         """
-        parts = [self.base_version]
+        # Inline the "parts" list construction for efficiency
+        result = [self.base_version]
 
-        # Pre-release
-        if self.pre is not None:
-            parts.append("".join(str(x) for x in self.pre))
+        pre = self.pre
+        if pre is not None:
+            # Avoid generator expression overhead
+            result.append(str(pre[0]) + str(pre[1]))
 
-        # Post-release
-        if self.post is not None:
-            parts.append(f".post{self.post}")
+        post = self.post
+        if post is not None:
+            result.append(f".post{post}")
 
-        # Development release
-        if self.dev is not None:
-            parts.append(f".dev{self.dev}")
+        dev = self.dev
+        if dev is not None:
+            result.append(f".dev{dev}")
 
-        # Local version segment
-        if self.local is not None:
-            parts.append(f"+{self.local}")
+        local = self.local
+        if local is not None:
+            result.append(f"+{local}")
 
-        return "".join(parts)
+        return "".join(result)
 
     @property
     def epoch(self) -> int:
