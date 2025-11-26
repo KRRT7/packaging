@@ -14,6 +14,16 @@ from typing import Any, Callable, NamedTuple, SupportsInt, Tuple, Union
 
 from ._structures import Infinity, InfinityType, NegativeInfinity, NegativeInfinityType
 
+_LETTER_NORMALIZATION = {
+    "alpha": "a",
+    "beta": "b",
+    "c": "rc",
+    "pre": "rc",
+    "preview": "rc",
+    "rev": "post",
+    "r": "post",
+}
+
 __all__ = ["VERSION_PATTERN", "InvalidVersion", "Version", "parse"]
 
 LocalType = Tuple[Union[int, str], ...]
@@ -459,23 +469,15 @@ def _parse_letter_version(
 ) -> tuple[str, int] | None:
     if letter:
         # We normalize any letters to their lower case form
-        letter = letter.lower()
+        ltr = letter.lower()
 
-        # We consider some words to be alternate spellings of other words and
-        # in those cases we want to normalize the spellings to our preferred
-        # spelling.
-        if letter == "alpha":
-            letter = "a"
-        elif letter == "beta":
-            letter = "b"
-        elif letter in ["c", "pre", "preview"]:
-            letter = "rc"
-        elif letter in ["rev", "r"]:
-            letter = "post"
+        # Normalize alternate spellings to preferred spelling via dict lookup
+        ltr = _LETTER_NORMALIZATION.get(ltr, ltr)
 
         # We consider there to be an implicit 0 in a pre-release if there is
         # not a numeral associated with it.
-        return letter, int(number or 0)
+        return ltr, int(number or 0)
+
 
     if number:
         # We assume if we are given a number, but we are not given a letter
