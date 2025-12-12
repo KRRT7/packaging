@@ -46,7 +46,8 @@ class NegativeInfinityType:
         return True
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, self.__class__)
+        # Compare by type directly for speed
+        return type(other) is NegativeInfinityType
 
     def __gt__(self, other: object) -> bool:
         return False
