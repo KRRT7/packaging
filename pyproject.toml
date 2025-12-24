@@ -28,7 +28,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
   "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+    "codeflash",
+]
 
 [project.urls]
 Documentation = "https://packaging.pypa.io/"
@@ -139,3 +141,6 @@ tests-root = "tests"
 test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["disabled"]
+
+[tool.uv.sources]
+codeflash = { path = "../codeflash", editable = true }
