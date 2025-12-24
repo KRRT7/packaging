@@ -286,6 +286,10 @@ class Specifier(BaseSpecifier):
         This method should only be called for operators where version
         strings are guaranteed to be valid PEP 440 versions (not ===).
         """
+        # Optimized: inline cache check to avoid function call overhead
+        if self._spec_version is not None and self._spec_version[0] == version:
+            return self._spec_version[1]
+        
         spec_version = self._get_spec_version(version)
         assert spec_version is not None
         return spec_version
@@ -494,7 +498,11 @@ class Specifier(BaseSpecifier):
         # NB: Local version identifiers are NOT permitted in the version
         # specifier, so local version labels can be universally removed from
         # the prospective version.
-        return _public_version(prospective) >= self._require_spec_version(spec)
+        
+        # Optimized: inline _public_version to avoid function call overhead
+        # and directly use the comparison
+        public_prospective = prospective if prospective._local is None else prospective.__replace__(local=None)
+        return public_prospective >= self._require_spec_version(spec)
 
     def _compare_less_than(self, prospective: Version, spec_str: str) -> bool:
         # Convert our spec to a Version instance, since we'll want to work with
