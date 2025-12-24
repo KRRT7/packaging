@@ -14,7 +14,8 @@ import sys
 import typing
 from typing import Any, Callable, Literal, SupportsInt, Tuple, TypedDict, Union
 
-from ._structures import Infinity, InfinityType, NegativeInfinity, NegativeInfinityType
+from ._structures import (Infinity, InfinityType, NegativeInfinity,
+                          NegativeInfinityType)
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self, Unpack
@@ -318,16 +319,43 @@ class Version(_BaseVersion):
         self._key_cache = None
 
     def __replace__(self, **kwargs: Unpack[_VersionReplace]) -> Self:
-        epoch = _validate_epoch(kwargs["epoch"]) if "epoch" in kwargs else self._epoch
-        release = (
-            _validate_release(kwargs["release"])
-            if "release" in kwargs
-            else self._release
-        )
-        pre = _validate_pre(kwargs["pre"]) if "pre" in kwargs else self._pre
-        post = _validate_post(kwargs["post"]) if "post" in kwargs else self._post
-        dev = _validate_dev(kwargs["dev"]) if "dev" in kwargs else self._dev
-        local = _validate_local(kwargs["local"]) if "local" in kwargs else self._local
+        # Fast path: if only local is being changed (common case in _public_version)
+        if len(kwargs) == 1 and "local" in kwargs:
+            new_local = _validate_local(kwargs["local"])
+            if new_local == self._local:
+                return self
+            
+            new_version = self.__class__.__new__(self.__class__)
+            new_version._key_cache = None
+            new_version._epoch = self._epoch
+            new_version._release = self._release
+            new_version._pre = self._pre
+            new_version._post = self._post
+            new_version._dev = self._dev
+            new_version._local = new_local
+            return new_version
+        
+        # General path: handle all possible parameters
+        epoch = self._epoch
+        release = self._release
+        pre = self._pre
+        post = self._post
+        dev = self._dev
+        local = self._local
+        
+        if "epoch" in kwargs:
+            epoch = _validate_epoch(kwargs["epoch"])
+        if "release" in kwargs:
+            release = _validate_release(kwargs["release"])
+        if "pre" in kwargs:
+            pre = _validate_pre(kwargs["pre"])
+        if "post" in kwargs:
+            post = _validate_post(kwargs["post"])
+        if "dev" in kwargs:
+            dev = _validate_dev(kwargs["dev"])
+        if "local" in kwargs:
+            local = _validate_local(kwargs["local"])
+        
 
         if (
             epoch == self._epoch
