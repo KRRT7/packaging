@@ -658,7 +658,16 @@ def _strip_trailing_zeros(release: tuple[int, ...]) -> tuple[int, ...]:
     # from the end and returns as soon as it finds a non-zero value. When
     # reading a lot of versions, this is a fairly hot function, so not using
     # enumerate/reversed, which is slightly slower.
-    for i in range(len(release) - 1, -1, -1):
+    length = len(release)
+    if length == 0:
+        return ()
+    
+    # Fast path: if last element is non-zero, return original
+    if release[length - 1] != 0:
+        return release
+    
+    # Find last non-zero element
+    for i in range(length - 2, -1, -1):
         if release[i] != 0:
             return release[: i + 1]
     return ()
@@ -680,28 +689,22 @@ def _cmpkey(
     # We'll do this by abusing the pre segment, but we _only_ want to do this
     # if there is not a pre or a post segment. If we have one of those then
     # the normal sorting rules will handle this case correctly.
-    if pre is None and post is None and dev is not None:
-        _pre: CmpPrePostDevType = NegativeInfinity
-    # Versions without a pre-release (except as noted above) should sort after
-    # those with one.
-    elif pre is None:
-        _pre = Infinity
+    if pre is None:
+        if post is None and dev is not None:
+            _pre: CmpPrePostDevType = NegativeInfinity
+        else:
+            # Versions without a pre-release (except as noted above) should sort after
+            # those with one.
+            _pre = Infinity
     else:
         _pre = pre
 
     # Versions without a post segment should sort before those with one.
-    if post is None:
-        _post: CmpPrePostDevType = NegativeInfinity
-
-    else:
-        _post = post
+    _post: CmpPrePostDevType = NegativeInfinity if post is None else post
 
     # Versions without a development segment should sort after those with one.
-    if dev is None:
-        _dev: CmpPrePostDevType = Infinity
+    _dev: CmpPrePostDevType = Infinity if dev is None else dev
 
-    else:
-        _dev = dev
 
     if local is None:
         # Versions without a local segment should sort before those with one.
@@ -715,7 +718,7 @@ def _cmpkey(
         # - Shorter versions sort before longer versions when the prefixes
         #   match exactly
         _local = tuple(
-            (i, "") if isinstance(i, int) else (NegativeInfinity, i) for i in local
+            (i, "") if type(i) is int else (NegativeInfinity, i) for i in local
         )
 
     return epoch, _release, _pre, _post, _dev, _local
