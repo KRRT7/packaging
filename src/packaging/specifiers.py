@@ -714,24 +714,42 @@ def _is_not_suffix(segment: str) -> bool:
 
 
 def _pad_version(left: list[str], right: list[str]) -> tuple[list[str], list[str]]:
-    left_split, right_split = [], []
-
-    # Get the release segment of our versions
-    left_split.append(list(itertools.takewhile(lambda x: x.isdigit(), left)))
-    right_split.append(list(itertools.takewhile(lambda x: x.isdigit(), right)))
-
-    # Get the rest of our versions
-    left_split.append(left[len(left_split[0]) :])
-    right_split.append(right[len(right_split[0]) :])
-
-    # Insert our padding
-    left_split.insert(1, ["0"] * max(0, len(right_split[0]) - len(left_split[0])))
-    right_split.insert(1, ["0"] * max(0, len(left_split[0]) - len(right_split[0])))
-
-    return (
-        list(itertools.chain.from_iterable(left_split)),
-        list(itertools.chain.from_iterable(right_split)),
-    )
+    # Find the split point for the release segment (contiguous digits)
+    left_split_idx = 0
+    for item in left:
+        if item.isdigit():
+            left_split_idx += 1
+        else:
+            break
+    
+    right_split_idx = 0
+    for item in right:
+        if item.isdigit():
+            right_split_idx += 1
+        else:
+            break
+    
+    # Calculate padding needed
+    left_release_len = left_split_idx
+    right_release_len = right_split_idx
+    
+    if left_release_len == right_release_len:
+        # No padding needed
+        return left, right
+    elif left_release_len < right_release_len:
+        # Pad left
+        padding_size = right_release_len - left_release_len
+        return (
+            left[:left_split_idx] + ["0"] * padding_size + left[left_split_idx:],
+            right
+        )
+    else:
+        # Pad right
+        padding_size = left_release_len - right_release_len
+        return (
+            left,
+            right[:right_split_idx] + ["0"] * padding_size + right[right_split_idx:]
+        )
 
 
 class SpecifierSet(BaseSpecifier):
