@@ -131,3 +131,11 @@ flake8-unused-arguments.ignore-variadic-names = true
 "src/packaging/_musllinux.py" = ["T20"]
 "docs/conf.py" = ["INP001", "S", "A001"]
 "noxfile.py" = ["T20", "S"]
+
+[tool.codeflash]
+# All paths are relative to this pyproject.toml's directory.
+module-root = "src"
+tests-root = "tests"
+test-framework = "pytest"
+ignore-paths = []
+formatter-cmds = ["disabled"]
