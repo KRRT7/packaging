@@ -33,6 +33,9 @@ def _coerce_version(version: UnparsedVersion) -> Version | None:
 
 
 def _public_version(version: Version) -> Version:
+    # Optimize: avoid creating new object if local is already None
+    if version.local is None:
+        return version
     return version.__replace__(local=None)
 
 
@@ -445,8 +448,10 @@ class Specifier(BaseSpecifier):
         # We need special logic to handle prefix matching
         if spec.endswith(".*"):
             # In the case of prefix matching we want to ignore local segment.
+            # In the case of prefix matching we want to ignore local segment.
+            prospective_for_comparison = _public_version(prospective)
             normalized_prospective = canonicalize_version(
-                _public_version(prospective), strip_trailing_zero=False
+                prospective_for_comparison, strip_trailing_zero=False
             )
             # Get the normalized version string ignoring the trailing .*
             normalized_spec = canonicalize_version(spec[:-2], strip_trailing_zero=False)
@@ -688,11 +693,14 @@ def _version_split(version: str) -> list[str]:
     result.append(epoch or "0")
 
     for item in rest.split("."):
-        match = _prefix_regex.fullmatch(item)
-        if match:
-            result.extend(match.groups())
-        else:
-            result.append(item)
+        # Optimize: only check regex if item contains both digits and letters
+        # This avoids expensive regex matching for pure numeric items
+        if item and item[0].isdigit() and not item.isdigit():
+            match = _prefix_regex.fullmatch(item)
+            if match:
+                result.extend(match.groups())
+                continue
+        result.append(item)
     return result
 
 
@@ -714,24 +722,44 @@ def _is_not_suffix(segment: str) -> bool:
 
 
 def _pad_version(left: list[str], right: list[str]) -> tuple[list[str], list[str]]:
-    left_split, right_split = [], []
-
-    # Get the release segment of our versions
-    left_split.append(list(itertools.takewhile(lambda x: x.isdigit(), left)))
-    right_split.append(list(itertools.takewhile(lambda x: x.isdigit(), right)))
-
-    # Get the rest of our versions
-    left_split.append(left[len(left_split[0]) :])
-    right_split.append(right[len(right_split[0]) :])
-
-    # Insert our padding
-    left_split.insert(1, ["0"] * max(0, len(right_split[0]) - len(left_split[0])))
-    right_split.insert(1, ["0"] * max(0, len(left_split[0]) - len(right_split[0])))
-
-    return (
-        list(itertools.chain.from_iterable(left_split)),
-        list(itertools.chain.from_iterable(right_split)),
-    )
+    # Optimize: use list comprehensions instead of itertools.takewhile with lambdas
+    # Find the split point where non-digit elements start
+    left_digit_count = 0
+    for item in left:
+        if not item.isdigit():
+            break
+        left_digit_count += 1
+    
+    right_digit_count = 0
+    for item in right:
+        if not item.isdigit():
+            break
+        right_digit_count += 1
+    
+    # Get release segments
+    left_release = left[:left_digit_count]
+    right_release = right[:right_digit_count]
+    
+    # Get the rest
+    left_rest = left[left_digit_count:]
+    right_rest = right[right_digit_count:]
+    
+    # Calculate padding
+    left_padding_size = max(0, right_digit_count - left_digit_count)
+    right_padding_size = max(0, left_digit_count - right_digit_count)
+    
+    # Build result lists efficiently
+    if left_padding_size:
+        result_left = left_release + ["0"] * left_padding_size + left_rest
+    else:
+        result_left = left_release + left_rest
+    
+    if right_padding_size:
+        result_right = right_release + ["0"] * right_padding_size + right_rest
+    else:
+        result_right = right_release + right_rest
+    
+    return (result_left, result_right)
 
 
 class SpecifierSet(BaseSpecifier):

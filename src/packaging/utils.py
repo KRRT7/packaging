@@ -81,7 +81,11 @@ def canonicalize_version(
             version = Version(version)
         except InvalidVersion:
             return str(version)
-    return str(_TrimmedRelease(version) if strip_trailing_zero else version)
+    # Avoid creating _TrimmedRelease when not needed
+    if strip_trailing_zero:
+        return str(_TrimmedRelease(version))
+    else:
+        return str(version)
 
 
 def parse_wheel_filename(
