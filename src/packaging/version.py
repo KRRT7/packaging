@@ -658,7 +658,15 @@ def _strip_trailing_zeros(release: tuple[int, ...]) -> tuple[int, ...]:
     # from the end and returns as soon as it finds a non-zero value. When
     # reading a lot of versions, this is a fairly hot function, so not using
     # enumerate/reversed, which is slightly slower.
-    for i in range(len(release) - 1, -1, -1):
+    if not release:
+        return ()
+    
+    # Fast path: if last element is non-zero, return as-is
+    if release[-1] != 0:
+        return release
+    
+    # Find the last non-zero element
+    for i in range(len(release) - 2, -1, -1):
         if release[i] != 0:
             return release[: i + 1]
     return ()
