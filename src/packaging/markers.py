@@ -179,19 +179,22 @@ _operators: dict[str, Operator] = {
 
 
 def _eval_op(lhs: str, op: Op, rhs: str | AbstractSet[str]) -> bool:
+    op_str = op.serialize()
+    # Fast path: use _operators if possible (avoids expensive Specifier creation and contains)
+    oper: Operator | None = _operators.get(op_str)
+    if oper is not None:
+        return oper(lhs, rhs)
+
+    # Only create a Specifier if needed (extremely expensive in profile)
     if isinstance(rhs, str):
         try:
-            spec = Specifier(f"{op.serialize()}{rhs}")
+            spec = Specifier(f"{op_str}{rhs}")
         except InvalidSpecifier:
             pass
         else:
             return spec.contains(lhs, prereleases=True)
 
-    oper: Operator | None = _operators.get(op.serialize())
-    if oper is None:
-        raise UndefinedComparison(f"Undefined {op!r} on {lhs!r} and {rhs!r}.")
-
-    return oper(lhs, rhs)
+    raise UndefinedComparison(f"Undefined {op!r} on {lhs!r} and {rhs!r}.")
 
 
 def _normalize(
@@ -219,11 +222,13 @@ def _evaluate_markers(
 ) -> bool:
     groups: list[list[bool]] = [[]]
 
+    append_group = groups[-1].append  # Minor optimization (local var lookup) for inner loop
+
     for marker in markers:
         assert isinstance(marker, (list, tuple, str))
 
         if isinstance(marker, list):
-            groups[-1].append(_evaluate_markers(marker, environment))
+            append_group(_evaluate_markers(marker, environment))
         elif isinstance(marker, tuple):
             lhs, op, rhs = marker
 
@@ -237,13 +242,18 @@ def _evaluate_markers(
                 rhs_value = environment[environment_key]
             assert isinstance(lhs_value, str), "lhs must be a string"
             lhs_value, rhs_value = _normalize(lhs_value, rhs_value, key=environment_key)
-            groups[-1].append(_eval_op(lhs_value, op, rhs_value))
+            append_group(_eval_op(lhs_value, op, rhs_value))
         else:
             assert marker in ["and", "or"]
             if marker == "or":
                 groups.append([])
+                append_group = groups[-1].append  # update append_group function to new group's append
 
-    return any(all(item) for item in groups)
+    # any(all(group)) for group in groups
+    for group in groups:
+        if all(group):
+            return True
+    return False
 
 
 def format_full_version(info: sys._version_info) -> str:
