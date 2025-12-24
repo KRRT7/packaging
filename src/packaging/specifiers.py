@@ -688,11 +688,12 @@ def _version_split(version: str) -> list[str]:
     result.append(epoch or "0")
 
     for item in rest.split("."):
-        match = _prefix_regex.fullmatch(item)
-        if match:
-            result.extend(match.groups())
-        else:
-            result.append(item)
+        if item and item[0].isdigit() and not item.isdigit():
+            match = _prefix_regex.fullmatch(item)
+            if match:
+                result.extend(match.groups())
+                continue
+        result.append(item)
     return result
 
 
