@@ -7,10 +7,72 @@ from __future__ import annotations
 from hypothesis import settings
 from hypothesis import strategies as st
 
+from packaging.ranges import VersionRange
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 SETTINGS = settings(max_examples=300, deadline=None)
+
+
+def _ranges_observations_match(
+    r1: VersionRange,
+    r2: VersionRange,
+    versions: list[Version],
+) -> None:
+    """Check base observation methods on *r1* and *r2* (no transforms)."""
+    assert r1 == r2, f"structural mismatch: {r1!r} != {r2!r}"
+    assert list(r1.filter(versions)) == list(r2.filter(versions)), (
+        f"filter mismatch: got {list(r1.filter(versions))!r}, "
+        f"expected {list(r2.filter(versions))!r}"
+    )
+    for v in versions:
+        assert (v in r1) == (v in r2), (
+            f"containment mismatch for {v!r}: {v in r1} vs {v in r2}"
+        )
+    assert r1.is_empty == r2.is_empty, (
+        f"is_empty mismatch: {r1.is_empty} vs {r2.is_empty}"
+    )
+    assert r1.is_prerelease_only == r2.is_prerelease_only, (
+        f"is_prerelease_only mismatch: {r1.is_prerelease_only} vs "
+        f"{r2.is_prerelease_only}"
+    )
+    ss1, ss2 = r1.to_specifier_set(), r2.to_specifier_set()
+    assert (ss1 is None) == (ss2 is None), (
+        f"to_specifier_set mismatch: {ss1!r} vs {ss2!r}"
+    )
+    if ss1 is not None:
+        assert ss1 == ss2, f"to_specifier_set mismatch: {ss1!r} vs {ss2!r}"
+    sets1, sets2 = r1.to_specifier_sets(), r2.to_specifier_sets()
+    assert (sets1 is None) == (sets2 is None), (
+        f"to_specifier_sets mismatch: {sets1!r} vs {sets2!r}"
+    )
+    if sets1 is not None:
+        assert sets1 == sets2, (
+            f"to_specifier_sets mismatch: {sets1!r} vs {sets2!r}"
+        )
+
+
+def assert_ranges_equivalent(
+    r1: VersionRange,
+    r2: VersionRange,
+    versions: list[Version],
+) -> None:
+    """Assert two ranges are semantically equivalent.
+
+    Checks observation methods (*==*, *filter*, containment, *is_empty*,
+    *is_prerelease_only*, *to_specifier_set*, *to_specifier_sets*) as
+    well as closure under complement, intersection and union with a
+    singleton built from ``versions[0]``.
+    """
+    _ranges_observations_match(r1, r2, versions)
+
+    # Closed under complement
+    _ranges_observations_match(r1.complement(), r2.complement(), versions)
+
+    # Closed under intersection and union (with a singleton)
+    other = VersionRange.singleton(versions[0])
+    _ranges_observations_match(r1.intersection(other), r2.intersection(other), versions)
+    _ranges_observations_match(r1.union(other), r2.union(other), versions)
 
 # PEP 440 versions covering the major forms.
 VERSION_POOL = [
